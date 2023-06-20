@@ -1,7 +1,9 @@
 <?php
-error_reporting(0);
+#######################################
+### Developed by gm808035@gmail.com ###
+#######################################
 
-
+file_put_contents(__DIR__ . '/log.log', var_export(['request' => $_REQUEST], true));
 
 #####################
 ### CONFIG OF BOT ###
@@ -70,14 +72,14 @@ else if ($_REQUEST['event'] == 'ONAPPINSTALL')
 
 	// register new bot
 	$result = restCommand('imbot.register', Array(
-		'CODE' => 'itrbot',
+		'CODE' => 'JARVIS_Bots',
 		'TYPE' => 'O',
 		'EVENT_MESSAGE_ADD' => $handlerBackUrl,
 		'EVENT_WELCOME_MESSAGE' => $handlerBackUrl,
 		'EVENT_BOT_DELETE' => $handlerBackUrl,
 		'OPENLINE' => 'Y',
 		'PROPERTIES' => Array(
-			'NAME' => 'ITR Bot for Open Channels #'.(count($appsConfig)+1),
+			'NAME' => 'NTEK_BOT',
 			'WORK_POSITION' => "Get ITR menu for you open channel",
 			'COLOR' => 'RED',
 		)
@@ -150,11 +152,11 @@ function itrRun($portalId, $dialogId, $userId, $message = '')
 		return false;
 
 	$menu0 = new ItrMenu(0);
-	$menu0->setText('Main menu (#0)');
-	$menu0->addItem(1, 'Text', ItrItem::sendText('Text message (for #USER_NAME#)'));
-	$menu0->addItem(2, 'Text without menu', ItrItem::sendText('Text message without menu', true));
-	$menu0->addItem(3, 'Open menu #1', ItrItem::openMenu(1));
-	$menu0->addItem(0, 'Wait operator answer', ItrItem::sendText('Wait operator answer', true));
+	$menu0->setText('Здравствуйте, вас приветствует компания NTEK. Выберите нужный вам продукт и мы перенаправим вас на нашего специалиста:');
+	$menu0->addItem(1, 'Каркасное строительство (ЛСТК)', ItrItem::transferToQueue(26, false));
+	$menu0->addItem(2, 'Фасадные решения', ItrItem::transferToQueue(28, false));
+	$menu0->addItem(3, 'Утепление термопеной', ItrItem::transferToQueue(14, false));
+	// $menu0->addItem(0, 'Вентиляция', ItrItem::sendText('Wait operator answer', true));
 
 	$menu1 = new ItrMenu(1);
 	$menu1->setText('Second menu (#1)');
@@ -451,8 +453,10 @@ class Itr
 		}
 		else if ($menuItemAction['TYPE'] == ItrItem::TYPE_QUEUE)
 		{
-			restCommand('imopenlines.bot.session.operator', Array(
+			restCommand('imopenlines.bot.session.transfer', Array(
 				"CHAT_ID" => substr($this->dialogId, 4),
+				"QUEUE_ID" => $menuItemAction['QUEUE_ID'],
+				"LEAVE" => $menuItemAction['LEAVE']? 'Y': 'N',
 			), $_REQUEST["auth"]);
 		}
 		else if ($menuItemAction['TYPE'] == ItrItem::TYPE_USER)
@@ -648,12 +652,14 @@ class ItrItem
 		);
 	}
 
-	public static function transferToQueue($text = '', $hideMenu = true)
+	public static function transferToQueue($queueId, $leave = false, $text = '', $hideMenu = true)
 	{
 		return Array(
 			'TYPE' => self::TYPE_QUEUE,
 			'TEXT' => $text,
-			'HIDE_MENU' => $hideMenu? true: false
+			'HIDE_MENU' => $hideMenu? true: false,
+			'QUEUE_ID' => $queueId,
+			'LEAVE' => $leave? true: false,
 		);
 	}
 
